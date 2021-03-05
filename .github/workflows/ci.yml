@@ -2,8 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: 
+    branches:
       - live-debug*
+      - ci_test
       - release/**
   pull_request:
     branches:
@@ -23,11 +24,10 @@ env:
   MINCONDA_VERSION: latest
   MINCONDA_LINUX: Linux-x86_64
   MINCONDA_OSX: MacOSX-x86_64
-  
 
 jobs:
   CI:
-    runs-on: ${{ matrix.config.os }}
+    runs-on: ${{matrix.os}}
     strategy:
       matrix:
         os: [ubuntu-16.04, ubuntu-latest, macos-10.15]
@@ -44,7 +44,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Setup conda environment "test"
       uses: conda-incubator/setup-miniconda@v2
       with:

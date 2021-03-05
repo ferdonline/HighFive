@@ -44,7 +44,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
+    
+    - name: Setup conda environment "test"
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        mamba-version: "*"
+        channels: conda-forge,defaults
+        channel-priority: true
+        environment-file: doc/environment.yaml
+        activate-environment: test
+        auto-activate-base: false
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build

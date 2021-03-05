@@ -1,0 +1,62 @@
+name: CMake
+
+on:
+  push:
+    branches: 
+      - live-debug*
+      - release/**
+  pull_request:
+    branches:
+      - master
+      - release/**
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1  # for reproducibility, dont autoupdate
+  BUILD_TYPE: RelWithDebInfo
+  HIGHFIVE_USE_XTENSOR: True
+  HIGHFIVE_USE_OPENCV: True
+  HIGHFIVE_PARALLEL_HDF5: False
+  MINCONDA_VERSION: latest
+  MINCONDA_LINUX: Linux-x86_64
+  MINCONDA_OSX: MacOSX-x86_64
+  
+
+jobs:
+  CI:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-latest, macos-10.15]
+        config:
+          - { compilers_eval : "" , cmake_option: "" }  # default OS settings
+          - { compilers_eval : "CC=gcc-8 CXX=g++-8",   cmake_option: "setuptools"  }
+        include:
+          - os: ubuntu-20.04
+            compilers_eval: "CC=gcc-10 CXX=g++-10"
+          - os: ubuntu-18.04
+            compilers_eval: "CC=clang-8 CXX=clang-8"
+          - os: ubuntu-20.04
+            compilers_eval: "CC=clang-10 CXX=clang-10"
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Build
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ctest -C $BUILD_TYPE
